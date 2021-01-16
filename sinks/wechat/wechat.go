@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -25,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AliyunContainerService/kube-eventer/common/filters"
 	"github.com/AliyunContainerService/kube-eventer/core"
 	"k8s.io/api/core/v1"
 	"k8s.io/klog"
@@ -125,27 +127,13 @@ func (d *WechatSink) isEventLevelDangerous(level string) bool {
 
 func (d *WechatSink) Send(event *v1.Event) {
 	if d.Namespaces != nil {
-		skip := true
-		for _, namespace := range d.Namespaces {
-			if namespace == event.Namespace {
-				skip = false
-				break
-			}
-		}
-		if skip {
+		if filters.Skip(event.Namespace, d.Namespaces) {
 			return
 		}
 	}
 
 	if d.Kinds != nil {
-		skip := true
-		for _, kind := range d.Kinds {
-			if kind == event.InvolvedObject.Kind {
-				skip = false
-				break
-			}
-		}
-		if skip {
+		if filters.Skip(event.InvolvedObject.Kind, d.Kinds) {
 			return
 		}
 	}

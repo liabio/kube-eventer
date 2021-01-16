@@ -87,13 +87,13 @@ func (this *KubernetesEventSource) GetNewEvents() *core.EventBatch {
 		Events:    []*kubeapi.Event{},
 	}
 	// Get all data from the buffer.
-event_loop:
+eventLoop:
 	for {
 		select {
 		case event := <-this.localEventsBuffer:
 			result.Events = append(result.Events, event)
 		default:
-			break event_loop
+			break eventLoop
 		}
 	}
 
@@ -127,22 +127,22 @@ func (this *KubernetesEventSource) watch() {
 
 		watchChannel := watcher.ResultChan()
 		// Inner loop, for update processing.
-	inner_loop:
+	innerLoop:
 		for {
 			select {
 			case watchUpdate, ok := <-watchChannel:
 				if !ok {
 					klog.Errorf("Event watch channel closed")
-					break inner_loop
+					break innerLoop
 				}
 
 				if watchUpdate.Type == kubewatch.Error {
 					if status, ok := watchUpdate.Object.(*metav1.Status); ok {
 						klog.Errorf("Error during watch: %#v", status)
-						break inner_loop
+						break innerLoop
 					}
 					klog.Errorf("Received unexpected error: %#v", watchUpdate.Object)
-					break inner_loop
+					break innerLoop
 				}
 
 				if event, ok := watchUpdate.Object.(*kubeapi.Event); ok {
